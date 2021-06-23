@@ -1,68 +1,49 @@
-let argv = (require ('minimist')) (process.argv.slice (2));
-let path = require ('path');
-let dotenv = require ('dotenv');
+let argv = (require('minimist'))(process.argv.slice(2));
+let path = require('path');
+let dotenv = require('dotenv');
 let config = {};
 
-dotenv.config ({ path: path.resolve ('.env') });
+dotenv.config({ path: path.resolve('.env') });
 
 // --
 
 config.argv = argv;
 
 config.discord = {
-  token  : process.env.DISCORD_TOKEN,
-  status : 'wc3stats.com',
-  emojis : '454365223021707265'
+  token: process.env.DISCORD_TOKEN,
+  status: 'wc3stats.com',
+  emojis: '454365223021707265'
 };
 
-// --
-
-config.clans = {
-  rate: 1000 * 60 * 1,
-
-  guilds: [
-    {
-      // Broken Alliances
-      id: '245688273937104897',
-
-      lang: {
-        clan: /Clan (.*)/,
-
-        ranks: [
-          { rank: 'Chieftain', level: 1 },
-          { rank: 'Shaman', level: 2 },
-          { rank: 'Grunt', level: 3 },
-          { rank: 'Peon', level: 4 }
-        ]
-      }
-    }
-  ]
-};
-
-// --
 
 config.lobbies = {
   guilds: [
     {
-      // Broken Alliances
-      id: '245688273937104897',
-      channel: '721485109764554865',
+      id: '853212950688301076',
+      channel: '856080526791409725',
       ping: false,
-      clean: true,
-
+      clean: false,
+      map: {
+        thumbnail: 'https://wc3maps.com/maps/131593/archive/war3mapMap.jpg',
+        name: 'Hero Push',
+        downloadURL: 'https://wc3modding.info/5637/hero-push/dlattach/attach/2605/',
+      },
       patterns: [
-        { map: /Broken.Alliances/i }
+        { map: /Hero_Push/i }
       ]
     },
-
     {
-      // Coming of the Horde
-      id: '367754510736556034',
-      channel: '409764349222322176',
-      ping: '@here',
-
+      id: '853212950688301076',
+      channel: '856080140470452244',
+      ping: false,
+      clean: false,
+      map: {
+        thumbnail: 'https://www.epicwar.com/assets/p/1251/312592.jpg',
+        name: 'Lost Temple Heroes',
+        downloadURL: 'https://www.epicwar.com/maps/download/312592/2057b7b9409703e817907cf30a3a0f04e5a948271e24f176f085493601cd608660d3145a/LTH2.1.4P.w3x',
+      },
       patterns: [
-        { map: /Coming of the Horde/i }
+        { map: /LTH/i }
       ]
     }
   ]
