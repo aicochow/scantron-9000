@@ -45,6 +45,21 @@ config.lobbies = {
       patterns: [
         { map: /LTH\d\.\d\.\d/i }
       ]
+    },
+    // test
+    {
+      id: '853212950688301076',
+      channel: '857076265537241119',
+      ping: false,
+      clean: false,
+      map: {
+        thumbnail: 'https://www.epicwar.com/assets/p/1251/312592.jpg',
+        name: 'Lost Temple Heroes',
+        downloadURL: 'https://www.epicwar.com/maps/download/312592/2057b7b9409703e817907cf30a3a0f04e5a948271e24f176f085493601cd608660d3145a/LTH2.1.4P.w3x',
+      },
+      patterns: [
+        { map: /test/i }
+      ]
     }
   ]
 };
