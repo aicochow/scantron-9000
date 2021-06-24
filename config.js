@@ -11,7 +11,7 @@ config.argv = argv;
 
 config.discord = {
   token: process.env.DISCORD_TOKEN,
-  status: 'wc3stats.com',
+  status: 'Warcraft III',
   emojis: '454365223021707265'
 };
 
@@ -43,7 +43,7 @@ config.lobbies = {
         downloadURL: 'https://www.epicwar.com/maps/download/312592/2057b7b9409703e817907cf30a3a0f04e5a948271e24f176f085493601cd608660d3145a/LTH2.1.4P.w3x',
       },
       patterns: [
-        { map: /LTH/i }
+        { map: /LTH\d\.\d\.\d/i }
       ]
     }
   ]
