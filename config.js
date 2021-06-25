@@ -48,3 +48,5 @@ config.lobbies = {
     }
   ]
 };
+
+module.exports = config;
