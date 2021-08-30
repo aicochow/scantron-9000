@@ -4,60 +4,70 @@ let config = require('@/config');
 let { discord, embed } = require('@/lib/discord');
 let { servers, colors } = require('@/lib/dict');
 let { timeago, detag, DOMMYYYY, HMS } = require('@/lib/util');
+const axios = require('axios');
 let M = {};
-
-function main() {
-  let wss = new ws('ws://ws.wc3stats.com');
-
-  wss.on('open', () => {
-    wss.on('message', (m) => {
-      m = JSON.parse(m);
-
-      switch (m.messageType) {
-        case 'GameListCreate': createGame(m.message); break;
-        case 'GameListUpdate': updateGame(m.message); break;
-        case 'GameListDelete': deleteGame(m.message); break;
-      }
-    });
-
-    let m = JSON.stringify({
-      messageType: "Subscribe",
-      message: [
-        "GameList"
-      ]
-    });
-
-    wss.send(m);
-  });
+const headers = {
+  'referer': 'https://wc3maps.com/live',
+  'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)',
+  'connection': 'keep-alive'
 }
 
-async function createGame(m) {
-  for (let i = 0; i < config.lobbies.guilds.length; i++) {
-    let g;
-    let guild;
-    let channel;
+function main() {
+  setInterval(fetchData, 10000)
+}
+function fetchData() {
+  axios({
+    method: 'get',
+    url: 'https://wc3maps.com/api/v1/listgames',
+    headers: headers,
+  }).then(function (response) {
+    if (!response.data.error && response.data.results) {
+      console.log(response.data);
+      let I = [];
+      response.data.results.forEach(result => {
+        I.push(result.rfid)
+        if (result.rfid in M) {
+          updateGame(result)
+        } else {
+          config.lobbies.guilds.forEach(guild => {
+            guild.patterns.forEach(p => {
+              if (result.path.match(p.map)) {
+                createGame(result, guild)
+              }
+            })
+          })
+        }
+      })
 
-    g = config.lobbies.guilds[i];
+      for (const id in M) {
+        if (!I.includes(parseInt(id))) {
+          deleteGame(id)
+        }
+      }
 
-    if (matches(m, g.patterns)) {
-      guild = await discord.guilds.fetch(g.id);
-      channel = guild.channels.cache.get(g.channel);
-
-      M[m.id] = {
-        guild,
-        channel,
-        ping: g.ping,
-        clean: g.clean,
-        game: m,
-        mapThumbnail: g.map.thumbnail,
-        mapName: g.map.name,
-        mapDownloadURL: g.map.downloadURL,
-        post: null
-      };
-
-      await updateGame(m);
     }
-  }
+  }).catch(function (error) {
+    console.log(error)
+  })
+}
+
+async function createGame(m, g) {
+  let guild = await discord.guilds.fetch(g.id);
+  let channel = guild.channels.cache.get(g.channel);
+
+  M[m.rfid] = {
+    guild,
+    channel,
+    ping: g.ping,
+    clean: g.clean,
+    game: m,
+    mapThumbnail: g.map.thumbnail,
+    mapName: g.map.name,
+    mapDownloadURL: g.map.downloadURL,
+    post: null
+  };
+
+  await updateGame(m)
 }
 
 async function updateGame(m) {
@@ -67,98 +77,71 @@ async function updateGame(m) {
   let s;
   let e;
 
-  if (m.id in M) {
-    for (k of Object.keys(m)) M[m.id].game[k] = m[k];
+  if (m.rfid in M) {
+    for (k of Object.keys(m)) M[m.rfid].game[k] = m[k];
 
-    E = M[m.id];
+    E = M[m.rfid];
     g = E.game;
-    s = g.slotsTaken / g.slotsTotal >= .6;
-
-    // --
+    s = g.slots_taken / g.slots_total >= .6;
 
     e = embed()
       .setColor(s ? colors.yellow : colors.green)
       .setAuthor(g.host, 'https://dashboard.snapcraft.io/site_media/appmedia/2021/05/discord.png')
-      .setDescription('**Created** : ' + timeago(g.created))
-      .setTitle(M[m.id].mapName)
-      .setURL(M[m.id].mapDownloadURL)
-      .setThumbnail(M[m.id].mapThumbnail)
+      .setDescription('**Created** : ' + timeago(g.creation_time))
+      .setTitle(M[m.rfid].mapName)
+      .setURL(M[m.rfid].mapDownloadURL)
+      .setThumbnail(M[m.rfid].mapThumbnail)
       .addFields(
         { name: 'Game Name', value: g.name },
-        { name: 'Slots', value: g.slotsTaken + '/' + g.slotsTotal, inline: true },
-        { name: 'Server', value: servers[g.server], inline: true },
-        { name: 'Map', value: g.map, inline: true },
+        { name: 'Slots', value: g.slots_taken + '/' + g.slots_total, inline: true },
+        { name: 'Server', value: servers[g.region], inline: true },
+        { name: 'Map', value: g.path, inline: true },
       )
 
-    // --
-
     if (!E.post) {
-      printf(process.stdout, "LOBBIES :: Creating [%d]\n", m.id);
+      printf(process.stdout, "LOBBIES :: Creating [%d]\n", m.rfid);
       E.post = await E.channel.send(E.ping || "", e);
     } else {
-      printf(process.stdout, "LOBBIES :: Editing [%d]\n", m.id);
+      printf(process.stdout, "LOBBIES :: Editing [%d]\n", m.rfid);
       await E.post.edit("", e);
     }
   }
 }
 
-async function deleteGame(m) {
+async function deleteGame(id) {
   let E;
   let g;
   let e;
 
-  if (m.id in M) {
-    for (k of Object.keys(m)) M[m.id].game[k] = m[k];
+  E = M[id];
+  g = E.game;
 
-    E = M[m.id];
-    g = E.game;
+  e = embed()
+    .setColor(colors.red)
+    .setAuthor(g.host, 'https://dashboard.snapcraft.io/site_media/appmedia/2021/05/discord.png')
+    .setDescription("**Started/Closed** after " + timeago(g.creation_time))
+    .setTitle(M[id].mapName)
+    .setURL(M[id].mapDownloadURL)
+    .setThumbnail(M[id].mapThumbnail)
+    .addFields(
+      { name: 'Game Name', value: g.name },
+      { name: 'Slots', value: g.slots_taken + '/' + g.slots_total, inline: true },
+      { name: 'Server', value: servers[g.region], inline: true },
+      { name: 'Map', value: g.path, inline: true },
+    )
 
-    // --
-    e = embed()
-      .setColor(g.started ? colors.purple : colors.red)
-      .setAuthor(g.host, 'https://dashboard.snapcraft.io/site_media/appmedia/2021/05/discord.png')
-      .setDescription(g.started ? "**Started** after " + HMS(g.uptime) : '**Closed** after ' + HMS(g.uptime))
-      .setTitle(M[m.id].mapName)
-      .setURL(M[m.id].mapDownloadURL)
-      .setThumbnail(M[m.id].mapThumbnail)
-      .addFields(
-        { name: 'Game Name', value: g.name },
-        { name: 'Slots', value: g.slotsTaken + '/' + g.slotsTotal, inline: true },
-        { name: 'Server', value: servers[g.server], inline: true },
-        { name: 'Map', value: g.map, inline: true },
-      )
+  if (E.post) {
+    printf(process.stdout, "LOBBIES :: Deleting [%d]\n", id);
 
-    // --
-
-    if (E.post) {
-      printf(process.stdout, "LOBBIES :: Deleting [%d]\n", m.id);
-
-      if (E.clean) {
-        await E.post.delete();
-      } else {
-        await E.post.edit("", e);
-      }
+    if (E.clean) {
+      await E.post.delete();
+    } else {
+      await E.post.edit("", e);
     }
-
-    delete M[m.id];
-  }
-}
-
-function matches(m, P) {
-  for (let i = 0; i < P.length; i++) {
-    let s = 1;
-
-    for (let k of Object.keys(P[i])) {
-      if (!P[i][k].test(m[k])) {
-        s = 0;
-        break;
-      }
-    }
-
-    if (s) return (1);
   }
 
-  return (0);
+  delete M[id];
+
 }
 
 module.exports = { main };
