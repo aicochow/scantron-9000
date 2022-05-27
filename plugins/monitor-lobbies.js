@@ -29,6 +29,14 @@ function main() {
 
     wss.send(m);
   });
+  wss.onclose = function (e) {
+    setTimeout(function () {
+      main();
+    }, 10000);
+  };
+  wss.onerror = function (err) {
+    wss.close();
+  };
 }
 
 async function createGame(m) {
