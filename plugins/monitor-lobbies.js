@@ -30,6 +30,13 @@ function main() {
     wss.send(m);
   });
   wss.onclose = function (e) {
+    for (let k of Object.keys(M)) {
+      let E = M[k];
+
+      if (E.post) {
+        M[k].post.delete();
+      }
+    }
     setTimeout(function () {
       main();
     }, 10000);
