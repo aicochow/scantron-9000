@@ -37,12 +37,7 @@ function main() {
         M[k].post.delete();
       }
     }
-    setTimeout(function () {
-      main();
-    }, 10000);
-  };
-  wss.onerror = function (err) {
-    wss.close();
+    setTimeout(main, 1000 * 10 + Math.random() * 5000);
   };
 }
 
