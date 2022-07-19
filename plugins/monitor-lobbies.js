@@ -29,16 +29,16 @@ function main() {
 
     wss.send(m);
   });
-  wss.onclose = function (e) {
-    for (let k of Object.keys(M)) {
-      let E = M[k];
+  // wss.onclose = function (e) {
+  //   for (let k of Object.keys(M)) {
+  //     let E = M[k];
 
-      if (E.post) {
-        M[k].post.delete();
-      }
-    }
-    setTimeout(main, 1000 * 10 + Math.random() * 5000);
-  };
+  //     if (E.post) {
+  //       M[k].post.delete();
+  //     }
+  //   }
+  //   setTimeout(main, 1000 * 10 + Math.random() * 5000);
+  // };
 }
 
 async function createGame(m) {
