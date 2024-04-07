@@ -7,7 +7,7 @@ let { timeago, detag, DOMMYYYY, HMS } = require('@/lib/util');
 const axios = require('axios');
 let M = {};
 const headers = {
-  'referer': 'https://wc3maps.com/live',
+  'referer': 'https://wc3stats.com/',
   'user-agent': 'Googlebot/2.1 (+http://www.google.com/bot.html)',
   'connection': 'keep-alive'
 }
@@ -18,20 +18,19 @@ function main() {
 function fetchData() {
   axios({
     method: 'get',
-    url: 'https://wc3maps.com/api/lobbies',
+    url: 'https://api.wc3stats.com/gamelist',
     headers: headers,
   }).then(function (response) {
-    if (!response.data.error && response.data.results) {
-      console.log(response.data);
+    if (response.status === 200 && response.data.code === 200 && response.data.body.length > 0) {
       let I = [];
-      response.data.results.forEach(result => {
+      response.data.body.forEach(result => {
         I.push(result.host)
         if (result.host in M) {
           updateGame(result)
         } else {
           config.lobbies.guilds.forEach(guild => {
             guild.patterns.forEach(p => {
-              if (result.path.match(p.map)) {
+              if (result.map.match(p.map)) {
                 createGame(result, guild)
               }
             })
@@ -82,7 +81,7 @@ async function updateGame(m) {
 
     E = M[m.host];
     g = E.game;
-    s = g.slots_taken / g.slots_total >= .6;
+    s = g.slotsTaken / g.slotsTotal >= .6;
 
     e = embed()
       .setColor(s ? colors.yellow : colors.green)
@@ -93,9 +92,9 @@ async function updateGame(m) {
       .setThumbnail(M[m.host].mapThumbnail)
       .addFields(
         { name: 'Game Name', value: g.name },
-        { name: 'Slots', value: g.slots_taken + '/' + g.slots_total, inline: true },
-        { name: 'Server', value: servers[g.region], inline: true },
-        { name: 'Map', value: g.path, inline: true },
+        { name: 'Slots', value: g.slotsTaken + '/' + g.slotsTotal, inline: true },
+        { name: 'Server', value: servers[g.server], inline: true },
+        { name: 'Map', value: g.map, inline: true },
       )
 
     if (!E.post) {
@@ -125,9 +124,9 @@ async function deleteGame(host) {
     .setThumbnail(M[host].mapThumbnail)
     .addFields(
       { name: 'Game Name', value: g.name },
-      { name: 'Slots', value: g.slots_taken + '/' + g.slots_total, inline: true },
-      { name: 'Server', value: servers[g.region], inline: true },
-      { name: 'Map', value: g.path, inline: true },
+      { name: 'Slots', value: g.slotsTaken + '/' + g.slotsTotal, inline: true },
+      { name: 'Server', value: servers[g.server], inline: true },
+      { name: 'Map', value: g.map, inline: true },
     )
 
   if (E.post) {
