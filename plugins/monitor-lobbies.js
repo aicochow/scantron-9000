@@ -21,10 +21,9 @@ function fetchData() {
     url: 'https://wc3maps.com/api/lobbies',
     headers: headers,
   }).then(function (response) {
-    if (!response.data.error && response.data.results) {
-      console.log(response.data);
+    if (!response.data.error && response.data.data) {
       let I = [];
-      response.data.results.forEach(result => {
+      response.data.data.forEach(result => {
         I.push(result.host)
         if (result.host in M) {
           updateGame(result)

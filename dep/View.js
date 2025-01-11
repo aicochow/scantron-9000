@@ -85,7 +85,7 @@ export default class View
         Hosted by **${detag (game.host)}** on **${date (game.created)}**
         ${r.length ? `Lobby was open for **${r}**` : ''}
       `.trim ())
-      .setFooter (`Powered by battle.net | ${started ? 'Started' : 'Closed'}`, 'https://download.cnet.com/a/img/catalog/2019/06/20/1beee23f-1b12-4364-99c3-ce915d44a160/imgingest-286371551299044459.png')
+      .setFooter (`Powered by battle.net | ${started ? 'Started' : 'Closed'}`, 'https://us.shop.battle.net/static/favicon-32x32.png')
       .setColor (sidebar || dict.colours [state]);
 
     return embed;
@@ -100,5 +100,5 @@ function base ()
     .RichEmbed ()
     .setAuthor ('Warcraft III Stats', 'https://wc3stats.com/assets/favicon.png', 'https://discord.gg/N3VGkUM')
     .setTimestamp ()
-    .setFooter ('Powered by battle.net', 'https://download.cnet.com/a/img/catalog/2019/06/20/1beee23f-1b12-4364-99c3-ce915d44a160/imgingest-286371551299044459.png');
+    .setFooter ('Powered by battle.net', 'https://us.shop.battle.net/static/favicon-32x32.png');
 }
